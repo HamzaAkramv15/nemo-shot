@@ -19,7 +19,7 @@ use yami_px::{font, gfx, icons, look, ui};
 
 const HELP: &str = "yami-shot [area|window|screen] [--delay SECONDS]
 yami-shot ocr FILE
-yami-shot shot [-o DIR] [--lang en]
+yami-shot shot [-o DIR] [--lang en] [--frame PNG]
 
 settings: ~/.config/yami/shot.json, look: ~/.config/yami/style.json and style.shot.json";
 
@@ -80,14 +80,19 @@ fn take_lock() -> Option<Option<std::fs::File>> {
 fn shot(args: &[String]) -> i32 {
     let mut out = PathBuf::from("shots");
     let mut lang = String::new();
+    let mut frame = None;
     let mut it = args.iter();
     while let Some(a) = it.next() {
         match a.as_str() {
             "-o" => out = it.next().map(PathBuf::from).unwrap_or(out),
             "--lang" => lang = it.next().cloned().unwrap_or_default(),
+            // настоящий кадр экрана под оверлеем (картинки для README)
+            "--frame" => frame = it.next().and_then(|f| image::open(f).ok()).map(|i| i.to_rgb8()),
             _ => {}
         }
     }
+    let (w, h) = frame.as_ref().map_or((1280, 720), |f| (f.width() as i32, f.height() as i32));
+    let frame_px = frame.map(|f| f.pixels().map(|p| 0xff000000 | (p[0] as u32) << 16 | (p[1] as u32) << 8 | p[2] as u32).collect::<Vec<u32>>());
     let mut look = look::Look::load("shot");
     look.animations = false;
     if !lang.is_empty() {
@@ -96,13 +101,12 @@ fn shot(args: &[String]) -> i32 {
     i18n::set(&look.lang);
     i18n::audit(lang == "en" || yami_px::i18n::normalize(&lang) == "pt-BR");
     let _ = std::fs::create_dir_all(&out);
-    let (w, h) = (1280, 720);
     let mut fonts = font::Fonts::with(look.font("shot"));
     let mut ic = icons::Icons::new("");
     let t0 = std::time::Instant::now();
     let mut bad = 0;
     for (name, edit) in [("pick", false), ("edit", true)] {
-        let sn = snap::Snap::mock(w, h, edit, &look.theme, None);
+        let sn = snap::Snap::mock(w, h, edit, &look.theme, frame_px.clone());
         let mut buf = vec![0u32; (w * h) as usize];
         let mut ui = ui::Ui { cv: gfx::Canvas::new(&mut buf, w, h), f: &mut fonts, ic: &mut ic, t: look.theme, zones: vec![], ptr: None, down: false, anim: false, blink: false, tr: i18n::tr };
         draw::draw(&mut ui, &sn, true, t0, "", w, h);
