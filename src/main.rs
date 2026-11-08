@@ -5,6 +5,7 @@
 //   yami-shot ocr ФАЙЛ                 текст с картинки
 //   yami-shot shot [-o ПАПКА] [--lang en]   снимки оверлея в PNG без Wayland
 
+mod setup;
 mod app;
 mod cfg;
 mod draw;
@@ -19,12 +20,16 @@ use yami_px::{font, gfx, icons, look, ui};
 
 const HELP: &str = "yami-shot [area|window|screen] [--delay SECONDS]
 yami-shot ocr FILE
+yami-shot install|uninstall|deps
 yami-shot shot [-o DIR] [--lang en] [--frame PNG]
 
 settings: ~/.config/yami/shot.json, look: ~/.config/yami/style.json and style.shot.json";
 
 fn main() {
     let args: Vec<String> = std::env::args().skip(1).collect();
+    if let Some(c) = yami_px::install::dispatch(&setup::SPEC, &args) {
+        std::process::exit(c);
+    }
     let mut mode = Mode::Area;
     let mut delay = 0;
     let mut it = args.iter();

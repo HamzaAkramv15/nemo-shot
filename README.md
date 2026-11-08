@@ -5,10 +5,11 @@ Screenshot tool for Wayland: freeze, select, mark up, copy, read text and QR. A 
 ## Install
 
 ```sh
-./install.sh
+chmod +x yami-shot
+./yami-shot install
 ```
 
-Needs Rust 1.89 or newer, no root. It installs into `~/.local`. `./install.sh --deps` lists what it wants from the system, `./install.sh --uninstall` removes it.
+One file, no Rust and no root. `install` asks for the settings, lists what it will change and installs into `~/.local` only after your yes (`--yes` skips the questions, `--all` also turns on every option). `./yami-shot deps` lists what it wants from the system, `./yami-shot uninstall` removes it. To build it yourself: Rust 1.89 or newer, `cargo build --release --locked`, then `target/release/yami-shot install`.
 
 ## Use
 
