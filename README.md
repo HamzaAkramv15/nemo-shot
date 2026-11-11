@@ -105,7 +105,7 @@ light or dark as your system is set. Every part of it can be changed in two file
 | `font` | a font family |
 | `animations`, `animSpeed` | on or off; their length (0.5 fast, 2 slow) |
 | `colors` | any of `bg panel surface surfaceHi codeBg border dim accent deep glow bright selection text textDim textFaint onAccent textHi ok warn` |
-| `lang` | `ru`, `en`, `pt-BR`; empty: as the system |
+| `lang` | `ru`, `en`, `pt-BR`, `es`, `de`, `fr`, `uk`, `pl`; empty: as the system |
 
 The overlay reads them at every start. Inside the yami desktop the shell writes `style.json` itself
 and has a «screenshots» settings tab for `shot.json`.

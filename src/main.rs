@@ -104,7 +104,10 @@ fn shot(args: &[String]) -> i32 {
         look.lang = lang.clone();
     }
     i18n::set(&look.lang);
-    i18n::audit(lang == "en" || yami_px::i18n::normalize(&lang) == "pt-BR");
+    // русская надпись без перевода — ошибка на любом языке, кроме русского; `--fit`: надписи, которым тесно
+    let audit = !matches!(yami_px::i18n::normalize(&lang), "ru" | "");
+    i18n::audit(audit);
+    yami_px::gfx::watch_text(args.iter().any(|a| a == "--fit"));
     let _ = std::fs::create_dir_all(&out);
     let mut fonts = font::Fonts::with(look.font("shot"));
     let mut ic = icons::Icons::new("");
@@ -122,6 +125,10 @@ fn shot(args: &[String]) -> i32 {
             bad += 1;
         }
         println!("{}", f.display());
+        for p in yami_px::gfx::fit_report() {
+            println!("  layout [{name}]: {p}");
+            bad += 1;
+        }
     }
     let missed = i18n::take_missed();
     for m in &missed {
