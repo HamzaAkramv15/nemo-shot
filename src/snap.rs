@@ -704,22 +704,27 @@ impl App {
         self.work(move || {
             let mut path: Option<PathBuf> = None;
             let mut err = None;
+            let mut picked = false;
             // «сохранить как» спрашивает окно yami-files; без него — в папку скриншотов, как «сохранить»
             if ask && crate::notify::picker_available() {
                 let _ = std::fs::create_dir_all(&dir);
                 match crate::notify::pick_save(&dir, &name) {
-                    Some(p) => path = Some(p),
+                    Some(p) => (path, picked) = (Some(p), true),
                     None => return,
                 }
             } else if save || ask {
                 path = Some(dir.join(&name));
             }
-            if let Some(p) = &path {
+            if let Some(p) = path.take() {
                 if let Some(d) = p.parent() {
                     let _ = std::fs::create_dir_all(d);
                 }
-                if let Err(e) = std::fs::write(p, &png) {
-                    err = Some(e.to_string());
+                // место выбрали сами — пишем туда; своё имя — только новым файлом: два снимка в одну
+                // секунду не затирают друг друга, второй становится «…-2.png»
+                let r = if picked { std::fs::write(&p, &png).map(|_| p) } else { write_new(&p, &png) };
+                match r {
+                    Ok(p) => path = Some(p),
+                    Err(e) => err = Some(e.to_string()),
                 }
             }
             if copy {
@@ -784,4 +789,20 @@ impl App {
             self.snap_close();
         }
     }
+}
+
+/// записать в новый файл: имя занято — «имя-2.png», «имя-3.png»… (create_new: и другой процесс не перехватит)
+fn write_new(p: &std::path::Path, data: &[u8]) -> std::io::Result<PathBuf> {
+    use std::io::Write;
+    let stem = p.file_stem().map(|s| s.to_string_lossy().into_owned()).unwrap_or_default();
+    let ext = p.extension().map(|e| format!(".{}", e.to_string_lossy())).unwrap_or_default();
+    for n in 1..1000 {
+        let q = if n == 1 { p.to_path_buf() } else { p.with_file_name(format!("{stem}-{n}{ext}")) };
+        match std::fs::OpenOptions::new().write(true).create_new(true).open(&q) {
+            Ok(mut f) => return f.write_all(data).map(|_| q),
+            Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => continue,
+            Err(e) => return Err(e),
+        }
+    }
+    Err(std::io::Error::from(std::io::ErrorKind::AlreadyExists))
 }
