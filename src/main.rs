@@ -13,6 +13,7 @@ mod i18n;
 mod notify;
 mod ocr;
 mod snap;
+mod winshot;
 
 use snap::Mode;
 use std::path::PathBuf;
@@ -55,6 +56,15 @@ fn main() {
     let Some(lock) = take_lock() else { return };
     let look = look::Look::load("shot");
     i18n::set(&look.lang);
+    // окно на niri: без оверлея, средствами самого niri (см. winshot.rs); иначе — оверлей, как раньше
+    if mode == Mode::Window {
+        if delay > 0 {
+            std::thread::sleep(std::time::Duration::from_secs(delay as u64));
+        }
+        if let Some(code) = winshot::run(&cfg::Cfg::load()) {
+            std::process::exit(code);
+        }
+    }
     std::process::exit(app::run(mode, delay, look, cfg::Cfg::load(), lock));
 }
 

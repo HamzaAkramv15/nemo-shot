@@ -28,9 +28,6 @@ pub enum Tool {
     Arrow,
     Marker,
     Mosaic,
-    Count,
-    /// пипетка: щелчок копирует цвет точки как #rrggbb
-    Pick,
 }
 
 pub const TOOLS: &[(Tool, &str, &str, &str)] = &[
@@ -40,8 +37,6 @@ pub const TOOLS: &[(Tool, &str, &str, &str)] = &[
     (Tool::Arrow, "arrow", "t:arrow", "стрелка"),
     (Tool::Marker, "marker", "t:marker", "маркер"),
     (Tool::Mosaic, "mosaic", "t:mosaic", "мозаика"),
-    (Tool::Count, "count", "t:count", "номерок"),
-    (Tool::Pick, "drop", "t:pick", "пипетка"),
 ];
 pub(crate) const COLOR_ACTS: [&str; 6] = ["c:0", "c:1", "c:2", "c:3", "c:4", "c:5"];
 
@@ -51,7 +46,6 @@ pub struct Mark {
     pub pts: Vec<(i32, i32)>,
     pub color: C,
     pub size: i32,
-    pub n: u32,
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -120,11 +114,10 @@ impl Snap {
         let colors = Snap::colors(t);
         let marks = if edit {
             vec![
-                Mark { tool: Tool::Rect, pts: vec![p(330, 250), p(620, 380)], color: colors[0], size: 4, n: 0 },
-                Mark { tool: Tool::Arrow, pts: vec![p(820, 470), p(640, 390)], color: colors[1], size: 4, n: 0 },
-                Mark { tool: Tool::Marker, pts: vec![p(260, 420), p(560, 440)], color: colors[4], size: 14, n: 0 },
-                Mark { tool: Tool::Count, pts: vec![p(700, 260)], color: colors[0], size: 4, n: 1 },
-                Mark { tool: Tool::Mosaic, pts: vec![p(760, 230), p(900, 330)], color: colors[0], size: 4, n: 0 },
+                Mark { tool: Tool::Rect, pts: vec![p(330, 250), p(620, 380)], color: colors[0], size: 4 },
+                Mark { tool: Tool::Arrow, pts: vec![p(820, 470), p(640, 390)], color: colors[1], size: 4 },
+                Mark { tool: Tool::Marker, pts: vec![p(260, 420), p(560, 440)], color: colors[4], size: 14 },
+                Mark { tool: Tool::Mosaic, pts: vec![p(760, 230), p(900, 330)], color: colors[0], size: 4 },
             ]
         } else {
             vec![]
@@ -243,7 +236,7 @@ impl App {
         }
         self.snap = Some(sn);
         // мгновенный режим: снимок экрана — без оверлея, сразу в буфер и/или в папку
-        if mode == Mode::Screen && self.cfg.instant() {
+        if mode == Mode::Screen {
             self.snap_done();
             self.snap_close();
             return;
@@ -340,17 +333,6 @@ impl App {
                     return true;
                 }
                 let sel = sn.cur_sel(&out);
-                if sn.tool == Tool::Pick {
-                    // цвет точки снимка: снимок в физических пикселях, масштаб бывает дробным (1.25)
-                    if let Some(img) = sn.imgs.get(&out) {
-                        let px = ((x * img.w as f64 / w.max(1) as f64) as i32).clamp(0, img.w - 1);
-                        let py = ((y * img.h as f64 / h.max(1) as f64) as i32).clamp(0, img.h - 1);
-                        let c = img.px[(py * img.w + px) as usize] & 0xffffff;
-                        copy_text(&format!("#{c:06x}"));
-                        self.snap_hint(&crate::tf!("цвет #{:06x} скопирован", "colour #{:06x} copied", "cor #{:06x} copiada", c));
-                    }
-                    return true;
-                }
                 if let Some(r) = sel {
                     if let Some(k) = handles(r).iter().position(|hr| hr.inset(-3).contains(x, y)) {
                         sn.drag = Some(Drag::Handle(k as u8, r));
@@ -360,10 +342,9 @@ impl App {
                         if sn.tool == Tool::Select {
                             sn.drag = Some(Drag::Move(xi - r.x, yi - r.y, r));
                         } else {
-                            let n = sn.marks.iter().filter(|m| m.tool == Tool::Count).count() as u32 + 1;
-                            sn.marks.push(Mark { tool: sn.tool, pts: vec![(xi, yi)], color: colors[sn.color], size: if sn.tool == Tool::Marker { 14 } else { sn.size }, n });
+                            sn.marks.push(Mark { tool: sn.tool, pts: vec![(xi, yi)], color: colors[sn.color], size: if sn.tool == Tool::Marker { 14 } else { sn.size } });
                             sn.redo.clear();
-                            sn.drag = if sn.tool == Tool::Count { None } else { Some(Drag::Draw) };
+                            sn.drag = Some(Drag::Draw);
                         }
                         return true;
                     }
@@ -398,7 +379,7 @@ impl App {
                 if let Drag::Draw = d {
                     // нулевая рамка/стрелка — убрать
                     if let Some(m) = sn.marks.last() {
-                        if m.tool != Tool::Pen && m.tool != Tool::Count && m.pts.len() < 2 {
+                        if m.tool != Tool::Pen && m.pts.len() < 2 {
                             sn.marks.pop();
                         }
                     }
@@ -471,7 +452,6 @@ impl App {
 
     pub fn snap_key(&mut self, e: &KeyEvent) {
         let (ctrl, shift) = (self.mods.ctrl, self.mods.shift);
-        let ptr_w = self.snap.as_ref().and_then(|s| s.ptr.as_ref()).map(|p| self.output_size(&p.0).0).unwrap_or(1);
         let Some(sn) = &mut self.snap else { return };
         // снимок уже сделан (вспышка) или ждёт диалога: второй пробел, enter или автоповтор
         // клавиши не делают второй снимок (#13)
@@ -558,16 +538,6 @@ impl App {
                         self.snap_finish(true, false, false);
                         return;
                     }
-                    // без выделения — цвет под курсором
-                    if let Some((o, x, y)) = sn.ptr.clone() {
-                        if let Some(img) = sn.imgs.get(&o) {
-                            let k = img.w as f32 / ptr_w.max(1) as f32;
-                            let (cx, cy) = ((x as f32 * k) as i32, (y as f32 * k) as i32);
-                            let c = img.px[(cy.clamp(0, img.h - 1) * img.w + cx.clamp(0, img.w - 1)) as usize] & 0xffffff;
-                            copy_text(&format!("#{c:06x}"));
-                            self.snap_hint(&crate::tf!("цвет #{:06x} скопирован", "colour #{:06x} copied", "cor #{:06x} copiada", c));
-                        }
-                    }
                 }
                 31 => {
                     self.snap_finish(false, false, true);
@@ -612,7 +582,7 @@ impl App {
             let mut cv = Canvas::new(&mut buf, w, h);
             cv.blit(&img, -x0, -y0);
             for m in &sn.marks {
-                paint(&mut cv, &mut self.fonts, m, &img, (r.x, r.y), k, k, self.look.theme.on_accent);
+                paint(&mut cv, m, &img, (r.x, r.y), k, k);
             }
         }
         let mut rgba = Vec::with_capacity(buf.len() * 4);

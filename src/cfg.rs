@@ -23,7 +23,7 @@ pub struct Cfg {
 
 impl Default for Cfg {
     fn default() -> Cfg {
-        Cfg { dir: String::new(), copy: true, save: true, loupe: true, notify: true, delay: 3, confirm: "space".into(), prefix: "yami".into() }
+        Cfg { dir: String::new(), copy: true, save: true, loupe: true, notify: true, delay: 3, confirm: "space".into(), prefix: "nemo".into() }
     }
 }
 

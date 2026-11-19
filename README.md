@@ -13,11 +13,11 @@ no yami shell needed.
 
 ## What it does
 
-- An area, a window (on niri) or a whole screen, on every monitor at once, HiDPI and fractional
+- An area (with the overlay), the focused window (on niri, taken by niri itself, rounded corners and all) or a whole screen (instant, no overlay), on every monitor at once, HiDPI and fractional
   scales included (1.25 cuts exactly what you selected).
-- Marks: pen, frame, arrow, marker, mosaic to hide things, numbered dots, in six colours and three
+- Marks: pen, frame, arrow, marker, mosaic to hide things, in six colours and three
   widths; undo and redo.
-- A colour picker with a loupe: the colour under the cursor as `#rrggbb` into the clipboard.
+- A loupe for placing the selection edge to the pixel.
 - Text from the selection (tesseract, English and Russian on the same picture) and QR codes (zbar)
   into the clipboard.
 - Copy, save into a folder, or «save as» through yami-files' dialog (or zenity); a notification with
@@ -65,9 +65,9 @@ yami-shot shot -o DIR                              # the overlay as PNG without 
 |---|---|
 | Space or Enter, Esc | done (copy and save as set below), cancel |
 | Tab, W, F | area, window, screen in turn; the window; the screen under the cursor |
-| 1 … 8 | select, pen, frame, arrow, marker, mosaic, number, colour picker |
+| 1 … 6 | select, pen, frame, arrow, marker, mosaic |
 | arrows, Shift+arrows | move the selection by 1 or 10 pixels |
-| Ctrl+C | copy the selection; with nothing selected, the colour under the cursor |
+| Ctrl+C | copy the selection |
 | Ctrl+S | save as… |
 | Ctrl+Z, Ctrl+Shift+Z or Ctrl+Y | undo, redo |
 
