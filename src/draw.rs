@@ -3,7 +3,7 @@
 
 use crate::snap::*;
 use std::time::Instant;
-use yami_px::font::PX;
+use yami_px::font::{self, PX};
 use yami_px::gfx::{BoxStyle, Canvas, Img, C, R};
 use yami_px::ui::{Cur, Tone};
 
@@ -51,7 +51,7 @@ pub(crate) fn line(cv: &mut Canvas, a: (i32, i32), b: (i32, i32), size: i32, c: 
 
 /// метка m; координаты экрана → буфер: (p - o) · k. sb — пикселей снимка на точку экрана (масштаб
 /// монитора, бывает дробным: 1.25); на экране k = 1, в файле k = sb
-pub fn paint(cv: &mut Canvas, m: &Mark, base: &Img, o: (i32, i32), k: f32, sb: f32) {
+pub fn paint(cv: &mut Canvas, fonts: &mut font::Fonts, m: &Mark, base: &Img, o: (i32, i32), k: f32, sb: f32, on_accent: C) {
     let sc = |v: i32| (v as f32 * k).round() as i32;
     let tr = |p: (i32, i32)| (sc(p.0 - o.0), sc(p.1 - o.1));
     let size = sc(m.size).max(1);
@@ -118,7 +118,18 @@ pub fn paint(cv: &mut Canvas, m: &Mark, base: &Img, o: (i32, i32), k: f32, sb: f
                 line(cv, b, e, size, m.color);
             }
         }
-        Tool::Select => {}
+        Tool::Count => {
+            let Some(p) = m.pts.first() else { return };
+            let p = tr(*p);
+            let s = sc(26);
+            let r = R::new(p.0 - s / 2, p.1 - s / 2, s, s);
+            cv.pxbox(r, &BoxStyle::new(m.color, C::hex(0x0b0909)).shadow(sc(2)));
+            let face = font::px((16.0 * k).round() as u16);
+            let txt = m.n.to_string();
+            let tc = if yami_px::theme::lightness(m.color) > 0.6 { C::hex(0x0b0909) } else { on_accent };
+            cv.text_center(fonts, face, r, &txt, tc);
+        }
+        Tool::Select | Tool::Pick => {}
     }
 }
 
@@ -184,7 +195,7 @@ pub fn draw(ui: &mut Ui, sn: &Snap, loupe_on: bool, started: Instant, out: &str,
     if let Some(r) = sel {
         ui.cv.push_clip(r);
         for m in &sn.marks {
-            paint(&mut ui.cv, m, img, (0, 0), 1.0, img.w as f32 / w.max(1) as f32);
+            paint(&mut ui.cv, ui.f, m, img, (0, 0), 1.0, img.w as f32 / w.max(1) as f32, t.on_accent);
         }
         ui.cv.pop_clip();
         ui.cv.ants(R::new(r.x - 1, r.y - 1, r.w + 2, r.h + 2), t.ember, 4, ph);
@@ -248,10 +259,10 @@ pub(crate) fn loupe(ui: &mut Ui, img: &Img, px: i32, py: i32, w: i32, h: i32) {
     if x + side + 8 > w {
         x = px - 28 - side;
     }
-    if y + side + 38 > h {
-        y = py - 28 - side - 30;
+    if y + side + 56 > h {
+        y = py - 28 - side - 46;
     }
-    let fr = R::new(x - 4, y - 4, side + 8, side + 34);
+    let fr = R::new(x - 4, y - 4, side + 8, side + 52);
     ui.cv.pxbox(fr, &BoxStyle::new(t.panel.alpha(0.98), t.red).shadow(4));
     // масштаб снимка к экрану (HiDPI)
     let k = img.w as f32 / w.max(1) as f32;
@@ -272,7 +283,11 @@ pub(crate) fn loupe(ui: &mut Ui, img: &Img, px: i32, py: i32, w: i32, h: i32) {
     let c0 = R::new(x + (n / 2) * z, y + (n / 2) * z, z, z);
     ui.cv.outline(R::new(c0.x - 1, c0.y - 1, z + 2, z + 2), C::hex(0x0b0909), 1);
     ui.cv.outline(c0, C(0xffffffff), 1);
-    ui.cv.text_in(ui.f, PX, R::new(x, y + side + 6, side, 20), &format!("{px}, {py}"), t.text_faint);
+    let col = if cx >= 0 && cy >= 0 && cx < img.w && cy < img.h { img.px[(cy * img.w + cx) as usize] & 0xffffff } else { 0 };
+    ui.cv.fill(R::new(x, y + side + 8, 14, 14), C::hex(col));
+    ui.cv.outline(R::new(x, y + side + 8, 14, 14), t.border, 1);
+    ui.cv.text_in(ui.f, PX, R::new(x + 20, y + side + 4, side - 20, 22), &format!("#{col:06x}"), t.text);
+    ui.cv.text_in(ui.f, PX, R::new(x, y + side + 24, side, 20), &format!("{px}, {py}"), t.text_faint);
 }
 
 pub(crate) fn top_bar(ui: &mut Ui, sn: &Snap, w: i32) {
@@ -394,6 +409,8 @@ pub(crate) fn tip_of(a: &str) -> Option<&'static str> {
         "t:arrow" => "стрелка · 4",
         "t:marker" => "маркер · 5",
         "t:mosaic" => "мозаика · 6",
+        "t:count" => "номерок · 7",
+        "t:pick" => "пипетка: цвет в буфер · 8",
         "ocr" => "текст в буфер (tesseract)",
         "qr" => "QR-код в буфер",
         "undo" => "отменить · ctrl+z",
