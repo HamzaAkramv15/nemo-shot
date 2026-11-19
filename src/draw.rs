@@ -3,9 +3,9 @@
 
 use crate::snap::*;
 use std::time::Instant;
-use yami_px::font::{self, PX};
-use yami_px::gfx::{BoxStyle, Canvas, Img, C, R};
-use yami_px::ui::{Cur, Tone};
+use nemo_px::font::{self, PX};
+use nemo_px::gfx::{BoxStyle, Canvas, Img, C, R};
+use nemo_px::ui::{Cur, Tone};
 
 /// щелчок по зоне: кнопка панели или фон, глушащий щелчки
 #[derive(Clone, PartialEq)]
@@ -14,13 +14,13 @@ pub enum Act {
     Btn(&'static str),
 }
 
-impl yami_px::ui::Action for Act {
+impl nemo_px::ui::Action for Act {
     fn block() -> Self {
         Act::Block
     }
 }
 
-pub type Ui<'a, 'b> = yami_px::ui::Ui<'a, 'b, Act>;
+pub type Ui<'a, 'b> = nemo_px::ui::Ui<'a, 'b, Act>;
 
 // ── рисование меток (и на экране, и в файле) ───────────────────────────────
 /// квадратная кисть size по линии Брезенхэма
@@ -126,7 +126,7 @@ pub fn paint(cv: &mut Canvas, fonts: &mut font::Fonts, m: &Mark, base: &Img, o: 
             cv.pxbox(r, &BoxStyle::new(m.color, C::hex(0x0b0909)).shadow(sc(2)));
             let face = font::px((16.0 * k).round() as u16);
             let txt = m.n.to_string();
-            let tc = if yami_px::theme::lightness(m.color) > 0.6 { C::hex(0x0b0909) } else { on_accent };
+            let tc = if nemo_px::theme::lightness(m.color) > 0.6 { C::hex(0x0b0909) } else { on_accent };
             cv.text_center(fonts, face, r, &txt, tc);
         }
         Tool::Select | Tool::Pick => {}

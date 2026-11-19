@@ -1,15 +1,15 @@
-# yami-shot
+# nemo-shot
 
 [English](README.md) · Русский
 
 Скриншоты для Wayland: экран замирает, ты выделяешь, размечаешь, копируешь или сохраняешь, читаешь
 с него текст или QR-код. Работает в любом композиторе с layer-shell и screencopy (niri, Hyprland,
-Sway, river, KDE). Часть рабочего стола [yami](https://github.com/Trendorin/yami), которая работает
-и сама по себе: шелл yami не нужен.
+Sway, river, KDE). Часть рабочего стола [Nemo](https://github.com/HamzaAkramv15/nemo), которая работает
+и сама по себе: шелл nemo не нужен.
 
-| нейтральный вид (`plain`) | пиксельный вид (`yami`) |
+| нейтральный вид (`plain`) | пиксельный вид (`nemo`) |
 |---|---|
-| ![yami-shot в нейтральном виде](.github/assets/plain.png) | ![yami-shot в пиксельном виде](.github/assets/pixel.png) |
+| ![nemo-shot в нейтральном виде](.github/assets/plain.png) | ![nemo-shot в пиксельном виде](.github/assets/pixel.png) |
 
 ## Что умеет
 
@@ -20,7 +20,7 @@ Sway, river, KDE). Часть рабочего стола [yami](https://github.
 - Пипетка с лупой: цвет под курсором как `#rrggbb` в буфер обмена.
 - Текст из выделения (tesseract, английский и русский на одной картинке) и QR-коды (zbar) в буфер
   обмена.
-- Скопировать, сохранить в папку или «сохранить как» через диалог yami-files (или zenity);
+- Скопировать, сохранить в папку или «сохранить как» через диалог nemo-files (или zenity);
   уведомление с миниатюрой и кнопками «открыть» и «папка».
 
 ## Установка
@@ -28,20 +28,20 @@ Sway, river, KDE). Часть рабочего стола [yami](https://github.
 **Один файл** (x86_64, glibc 2.34 или новее), а также `grim` и `wl-clipboard` из твоего дистрибутива:
 
 ```sh
-curl -LO https://github.com/Trendorin/yami/releases/latest/download/yami-shot
-chmod +x yami-shot
-./yami-shot install
+curl -LO https://github.com/HamzaAkramv15/nemo/releases/latest/download/nemo-shot
+chmod +x nemo-shot
+./nemo-shot install
 ```
 
 Без Rust и root. `install` спросит язык и вид, покажет, что изменит, и запишет в `~/.local` только
 после твоего «да» (`--yes` берёт ответы по умолчанию).
 
-**Из исходников** (Rust 1.89 или новее): `git clone https://github.com/Trendorin/yami-shot`, затем
-`cargo build --release --locked` и `target/release/yami-shot install`. Библиотека рисования yami-px
-приходит при сборке из репозитория [yami](https://github.com/Trendorin/yami).
+**Из исходников** (Rust 1.89 или новее): `git clone https://github.com/HamzaAkramv15/nemo-shot`, затем
+`cargo build --release --locked` и `target/release/nemo-shot install`. Библиотека рисования nemo-px
+приходит при сборке из репозитория [Nemo](https://github.com/HamzaAkramv15/nemo).
 
-`yami-shot deps` — что берётся из системы: grim и wl-clipboard; по желанию tesseract с данными `eng`
-и `rus` (текст), zbar (QR), yami-files или zenity («сохранить как»). `yami-shot uninstall` убирает
+`nemo-shot deps` — что берётся из системы: grim и wl-clipboard; по желанию tesseract с данными `eng`
+и `rus` (текст), zbar (QR), nemo-files или zenity («сохранить как»). `nemo-shot uninstall` убирает
 всё обратно.
 
 ## Как пользоваться
@@ -50,15 +50,15 @@ chmod +x yami-shot
 
 ```kdl
 binds {
-    Print { spawn "yami-shot"; }
-    Shift+Print { spawn "yami-shot" "screen"; }
+    Print { spawn "nemo-shot"; }
+    Shift+Print { spawn "nemo-shot" "screen"; }
 }
 ```
 
 ```sh
-yami-shot [area|window|screen] [--delay СЕКУНДЫ]   # второй запуск закрывает открытый оверлей
-yami-shot ocr ФАЙЛ                                 # текст с картинки в stdout
-yami-shot shot -o ПАПКА                            # оверлей в PNG без Wayland
+nemo-shot [area|window|screen] [--delay СЕКУНДЫ]   # второй запуск закрывает открытый оверлей
+nemo-shot ocr ФАЙЛ                                 # текст с картинки в stdout
+nemo-shot shot -o ПАПКА                            # оверлей в PNG без Wayland
 ```
 
 | Клавиши | |
@@ -73,7 +73,7 @@ yami-shot shot -o ПАПКА                            # оверлей в PNG 
 
 ## Настройки
 
-`~/.config/yami/shot.json`:
+`~/.config/nemo/shot.json`:
 
 | Ключ | По умолчанию | Что |
 |---|---|---|
@@ -83,7 +83,7 @@ yami-shot shot -o ПАПКА                            # оверлей в PNG 
 | `loupe` | `true` | лупа рядом с курсором |
 | `notify` | `true` | уведомление с картинкой |
 | `delay` | `3` | секунды кнопки-таймера ◷ |
-| `prefix` | `yami` | начало имени файла |
+| `prefix` | `nemo` | начало имени файла |
 
 ## Вид и темы
 
@@ -92,12 +92,12 @@ yami-shot shot -o ПАПКА                            # оверлей в PNG 
 
 | Файл | Что |
 |---|---|
-| `~/.config/yami/style.json` | вид всех программ yami: тема пишется один раз, все её берут |
-| `~/.config/yami/style.shot.json` | чем yami-shot отличается (только эти ключи) |
+| `~/.config/nemo/style.json` | вид всех программ nemo: тема пишется один раз, все её берут |
+| `~/.config/nemo/style.shot.json` | чем nemo-shot отличается (только эти ключи) |
 
 | Ключ | Значения |
 |---|---|
-| `preset` | `plain` (нейтральный) или `yami` (пиксель-арт: целые пиксели, углы с вырезом, шрифт Tiny5 внутри бинаря) |
+| `preset` | `plain` (нейтральный) или `nemo` (пиксель-арт: целые пиксели, углы с вырезом, шрифт Tiny5 внутри бинаря) |
 | `palette`, `accent` | `blood`, `ash`, `sakura`, `amber`, `venom`, `ice`, `dusk`; или любой `#rrggbb`: остальная палитра строится от него |
 | `light` | `true` или `false`; нет ключа — как в системе |
 | `corners`, `radius` | `notch`, `round` или `square`; радиус в пикселях |
@@ -107,7 +107,7 @@ yami-shot shot -o ПАПКА                            # оверлей в PNG 
 | `colors` | любой из `bg panel surface surfaceHi codeBg border dim accent deep glow bright selection text textDim textFaint onAccent textHi ok warn` |
 | `lang` | `ru`, `en`, `pt-BR`, `es`, `de`, `fr`, `uk`, `pl`; пусто — как в системе |
 
-Оверлей читает их при каждом запуске. В рабочем столе yami `style.json` пишет сам шелл, а для
+Оверлей читает их при каждом запуске. В рабочем столе nemo `style.json` пишет сам шелл, а для
 `shot.json` есть вкладка настроек «скриншоты».
 
 ## Лицензия

@@ -1,15 +1,15 @@
-# yami-shot
+# nemo-shot
 
 English · [Русский](README.ru.md)
 
 A screenshot tool for Wayland: the screen freezes, you select, mark up, copy or save, read the text
 or a QR code off it. Works on any compositor with layer-shell and screencopy (niri, Hyprland, Sway,
-river, KDE). Part of the [yami](https://github.com/Trendorin/yami) desktop, and works on its own:
-no yami shell needed.
+river, KDE). Part of the [Nemo](https://github.com/HamzaAkramv15/nemo) desktop, and works on its own:
+no nemo shell needed.
 
-| neutral look (`plain`) | pixel look (`yami`) |
+| neutral look (`plain`) | pixel look (`nemo`) |
 |---|---|
-| ![yami-shot in the neutral look](.github/assets/plain.png) | ![yami-shot in the pixel look](.github/assets/pixel.png) |
+| ![nemo-shot in the neutral look](.github/assets/plain.png) | ![nemo-shot in the pixel look](.github/assets/pixel.png) |
 
 ## What it does
 
@@ -20,7 +20,7 @@ no yami shell needed.
 - A colour picker with a loupe: the colour under the cursor as `#rrggbb` into the clipboard.
 - Text from the selection (tesseract, English and Russian on the same picture) and QR codes (zbar)
   into the clipboard.
-- Copy, save into a folder, or «save as» through yami-files' dialog (or zenity); a notification with
+- Copy, save into a folder, or «save as» through nemo-files' dialog (or zenity); a notification with
   a thumbnail and «open» and «folder» buttons.
 
 ## Install
@@ -28,20 +28,20 @@ no yami shell needed.
 **One file** (x86_64, glibc 2.34 or newer) and `grim` and `wl-clipboard` from your distribution:
 
 ```sh
-curl -LO https://github.com/Trendorin/yami/releases/latest/download/yami-shot
-chmod +x yami-shot
-./yami-shot install
+curl -LO https://github.com/HamzaAkramv15/nemo/releases/latest/download/nemo-shot
+chmod +x nemo-shot
+./nemo-shot install
 ```
 
 No Rust and no root. `install` asks the language and the look, lists what it will change and writes
 into `~/.local` only after your yes (`--yes` takes the defaults).
 
-**From source** (Rust 1.89 or newer): `git clone https://github.com/Trendorin/yami-shot`, then
-`cargo build --release --locked` and `target/release/yami-shot install`. The drawing library,
-yami-px, comes with the build from the [yami](https://github.com/Trendorin/yami) repository.
+**From source** (Rust 1.89 or newer): `git clone https://github.com/HamzaAkramv15/nemo-shot`, then
+`cargo build --release --locked` and `target/release/nemo-shot install`. The drawing library,
+nemo-px, comes with the build from the [Nemo](https://github.com/HamzaAkramv15/nemo) repository.
 
-`yami-shot deps` lists what it uses: grim and wl-clipboard; optional tesseract with the `eng` and
-`rus` data (text), zbar (QR), yami-files or zenity («save as»). `yami-shot uninstall` takes
+`nemo-shot deps` lists what it uses: grim and wl-clipboard; optional tesseract with the `eng` and
+`rus` data (text), zbar (QR), nemo-files or zenity («save as»). `nemo-shot uninstall` takes
 everything back.
 
 ## Use
@@ -50,15 +50,15 @@ Bind it to a key in your compositor, for example in niri:
 
 ```kdl
 binds {
-    Print { spawn "yami-shot"; }
-    Shift+Print { spawn "yami-shot" "screen"; }
+    Print { spawn "nemo-shot"; }
+    Shift+Print { spawn "nemo-shot" "screen"; }
 }
 ```
 
 ```sh
-yami-shot [area|window|screen] [--delay SECONDS]   # a second start closes the open overlay
-yami-shot ocr FILE                                 # the text of a picture to stdout
-yami-shot shot -o DIR                              # the overlay as PNG without Wayland
+nemo-shot [area|window|screen] [--delay SECONDS]   # a second start closes the open overlay
+nemo-shot ocr FILE                                 # the text of a picture to stdout
+nemo-shot shot -o DIR                              # the overlay as PNG without Wayland
 ```
 
 | Keys | |
@@ -73,7 +73,7 @@ yami-shot shot -o DIR                              # the overlay as PNG without 
 
 ## Settings
 
-`~/.config/yami/shot.json`:
+`~/.config/nemo/shot.json`:
 
 | Key | Default | What |
 |---|---|---|
@@ -83,7 +83,7 @@ yami-shot shot -o DIR                              # the overlay as PNG without 
 | `loupe` | `true` | the magnifier next to the cursor |
 | `notify` | `true` | a notification with the picture |
 | `delay` | `3` | the seconds of the ◷ timer button |
-| `prefix` | `yami` | the start of the file name |
+| `prefix` | `nemo` | the start of the file name |
 
 ## Look and themes
 
@@ -92,12 +92,12 @@ light or dark as your system is set. Every part of it can be changed in two file
 
 | File | What |
 |---|---|
-| `~/.config/yami/style.json` | the look of every yami program: write a theme once, all of them take it |
-| `~/.config/yami/style.shot.json` | what yami-shot does differently (only those keys) |
+| `~/.config/nemo/style.json` | the look of every nemo program: write a theme once, all of them take it |
+| `~/.config/nemo/style.shot.json` | what nemo-shot does differently (only those keys) |
 
 | Key | Values |
 |---|---|
-| `preset` | `plain` (neutral) or `yami` (pixel art: whole pixels, notched corners, the Tiny5 font inside the binary) |
+| `preset` | `plain` (neutral) or `nemo` (pixel art: whole pixels, notched corners, the Tiny5 font inside the binary) |
 | `palette`, `accent` | `blood`, `ash`, `sakura`, `amber`, `venom`, `ice`, `dusk`; or any `#rrggbb`: the rest of the palette is made from it |
 | `light` | `true` or `false`; absent: as the system |
 | `corners`, `radius` | `notch`, `round` or `square`; the radius in pixels |
@@ -107,7 +107,7 @@ light or dark as your system is set. Every part of it can be changed in two file
 | `colors` | any of `bg panel surface surfaceHi codeBg border dim accent deep glow bright selection text textDim textFaint onAccent textHi ok warn` |
 | `lang` | `ru`, `en`, `pt-BR`, `es`, `de`, `fr`, `uk`, `pl`; empty: as the system |
 
-The overlay reads them at every start. Inside the yami desktop the shell writes `style.json` itself
+The overlay reads them at every start. Inside the nemo desktop the shell writes `style.json` itself
 and has a «screenshots» settings tab for `shot.json`.
 
 ## License

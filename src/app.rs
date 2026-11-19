@@ -34,11 +34,11 @@ use wayland_client::{
     Connection, QueueHandle,
 };
 use wayland_protocols::wp::cursor_shape::v1::client::wp_cursor_shape_device_v1::{Shape, WpCursorShapeDeviceV1};
-use yami_px::font::Fonts;
-use yami_px::gfx::{Canvas, Img};
-use yami_px::icons::Icons;
-use yami_px::look::Look;
-use yami_px::ui::{Cur, Zone};
+use nemo_px::font::Fonts;
+use nemo_px::gfx::{Canvas, Img};
+use nemo_px::icons::Icons;
+use nemo_px::look::Look;
+use nemo_px::ui::{Cur, Zone};
 
 pub enum Msg {
     SnapText(bool, Option<String>),
@@ -108,7 +108,7 @@ fn niri_focus() -> Option<String> {
 
 pub fn run(mode: Mode, delay: u32, look: Look, cfg: crate::cfg::Cfg, lock: Option<std::fs::File>) -> i32 {
     let Ok(conn) = Connection::connect_to_env() else {
-        eprintln!("yami-shot: no Wayland display");
+        eprintln!("nemo-shot: no Wayland display");
         return 1;
     };
     let Ok((globals, mut queue)) = registry_queue_init::<App>(&conn) else { return 1 };
@@ -122,7 +122,7 @@ pub fn run(mode: Mode, delay: u32, look: Look, cfg: crate::cfg::Cfg, lock: Optio
         }
     });
     let (Ok(compositor), Ok(shm), Ok(layer_shell)) = (CompositorState::bind(&globals, &qh), Shm::bind(&globals, &qh), LayerShell::bind(&globals, &qh)) else {
-        eprintln!("yami-shot: the compositor has no layer-shell");
+        eprintln!("nemo-shot: the compositor has no layer-shell");
         return 1;
     };
     let fonts = Fonts::with(look.font("shot"));
@@ -174,7 +174,7 @@ pub fn run(mode: Mode, delay: u32, look: Look, cfg: crate::cfg::Cfg, lock: Optio
         std::thread::sleep(Duration::from_millis(60));
     }
     let names = app.output_names();
-    let imgs: HashMap<String, Img> = names.iter().filter_map(|o| yami_px::gfx::grab_output(o).map(|i| (o.clone(), i))).collect();
+    let imgs: HashMap<String, Img> = names.iter().filter_map(|o| nemo_px::gfx::grab_output(o).map(|i| (o.clone(), i))).collect();
     app.on_snap_ready(imgs, snap::niri_windows(), mode);
     loop {
         if ev.dispatch(Some(Duration::from_secs(1)), &mut app).is_err() {
@@ -221,7 +221,7 @@ impl App {
         let surface = self.compositor.create_surface(&self.qh);
         let id = self.next_id;
         self.next_id += 1;
-        let layer = self.layer_shell.create_layer_surface(&self.qh, surface, Layer::Overlay, Some("yami-screenshot"), Some(&o));
+        let layer = self.layer_shell.create_layer_surface(&self.qh, surface, Layer::Overlay, Some("nemo-screenshot"), Some(&o));
         layer.set_anchor(Anchor::TOP | Anchor::BOTTOM | Anchor::LEFT | Anchor::RIGHT);
         layer.set_exclusive_zone(-1);
         layer.set_keyboard_interactivity(if keyboard { KeyboardInteractivity::Exclusive } else { KeyboardInteractivity::None });
@@ -256,7 +256,7 @@ impl App {
             Mode::Window => "window",
             Mode::Screen => "screen",
         };
-        let _ = std::process::Command::new(yami_px::paths::self_exe()).args([m, "--delay", &d.to_string()]).spawn();
+        let _ = std::process::Command::new(nemo_px::paths::self_exe()).args([m, "--delay", &d.to_string()]).spawn();
     }
 
     fn on_msg(&mut self, m: Msg) {
@@ -314,7 +314,7 @@ impl App {
         let ptr = self.ptr.filter(|p| p.0 == s.id).map(|p| (p.1, p.2));
         let down = self.press.as_ref().is_some_and(|p| p.0 == s.id);
         {
-            let mut ui: Ui = yami_px::ui::Ui { cv: Canvas::new(buf, w, h), f: &mut self.fonts, ic: &mut self.icons, t: self.look.theme, zones: vec![], ptr, down, anim: false, blink: false, tr: crate::i18n::tr };
+            let mut ui: Ui = nemo_px::ui::Ui { cv: Canvas::new(buf, w, h), f: &mut self.fonts, ic: &mut self.icons, t: self.look.theme, zones: vec![], ptr, down, anim: false, blink: false, tr: crate::i18n::tr };
             draw::draw(&mut ui, sn, self.cfg.loupe, self.t0, &s.name, w, h);
             s.zones = std::mem::take(&mut ui.zones);
             s.anim = ui.anim;

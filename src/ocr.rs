@@ -284,7 +284,7 @@ fn langs() -> Vec<&'static str> {
 /// распознать картинку (PNG, JPEG, WebP — что угодно, что читает image); None — текста нет или
 /// tesseract не справился. Работает долго (доли секунды — секунды): только в нити
 pub fn recognize(img: &image::DynamicImage) -> Option<String> {
-    let dir = yami_px::paths::private_tmp("yami-ocr").ok()?;
+    let dir = nemo_px::paths::private_tmp("nemo-ocr").ok()?;
     let (words, block) = read(img, &dir);
     let _ = std::fs::remove_dir_all(&dir);
     let mut lines: Vec<Vec<(Word, String)>> = vec![];
@@ -424,18 +424,18 @@ fn merge(base: &[Word], eng: &[Word], rus: &[Word]) -> Vec<(Word, String)> {
     out
 }
 
-/// `yami ocr FILE`: текст с картинки в stdout
+/// `nemo ocr FILE`: текст с картинки в stdout
 pub fn cli(args: &[String]) -> i32 {
     let Some(f) = args.first().filter(|a| !a.starts_with('-')) else {
-        eprintln!("yami-shot ocr FILE");
+        eprintln!("nemo-shot ocr FILE");
         return 2;
     };
-    if yami_px::paths::find_exe("tesseract").is_none() {
-        eprintln!("yami-shot: {}", crate::tf!("нужен tesseract (компонент пакет tesseract)", "tesseract is needed (the tesseract package)", "tesseract é necessário (pacote tesseract)"));
+    if nemo_px::paths::find_exe("tesseract").is_none() {
+        eprintln!("nemo-shot: {}", crate::tf!("нужен tesseract (компонент пакет tesseract)", "tesseract is needed (the tesseract package)", "tesseract é necessário (pacote tesseract)"));
         return 1;
     }
     let Ok(img) = image::open(f) else {
-        eprintln!("yami-shot: {}", crate::tf!("не читается: {}", "cannot read: {}", "não foi possível ler: {}", f));
+        eprintln!("nemo-shot: {}", crate::tf!("не читается: {}", "cannot read: {}", "não foi possível ler: {}", f));
         return 2;
     };
     match recognize(&img) {
@@ -444,7 +444,7 @@ pub fn cli(args: &[String]) -> i32 {
             0
         }
         None => {
-            eprintln!("yami-shot: {}", crate::tf!("текст не распознан", "no text recognised", "nenhum texto reconhecido"));
+            eprintln!("nemo-shot: {}", crate::tf!("текст не распознан", "no text recognised", "nenhum texto reconhecido"));
             1
         }
     }

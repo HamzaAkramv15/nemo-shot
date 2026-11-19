@@ -1,13 +1,13 @@
-// Разговор с остальной системой: уведомления по стандарту freedesktop (любой сервер: шелл yami, mako,
-// dunst…) и окно «сохранить как» (yami-files, иначе zenity).
+// Разговор с остальной системой: уведомления по стандарту freedesktop (любой сервер: шелл nemo, mako,
+// dunst…) и окно «сохранить как» (nemo-files, иначе zenity).
 
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::mpsc;
 use std::time::Duration;
-use yami_px::gfx::Img;
-use yami_px::paths::find_exe;
+use nemo_px::gfx::Img;
+use nemo_px::paths::find_exe;
 use zbus::blocking::{Connection, Proxy};
 use zbus::zvariant::{StructureBuilder, Value};
 
@@ -39,7 +39,7 @@ pub fn send(summary: &str, body: &str, thumb: Option<&Img>, actions: &[(String, 
     let list: Vec<&str> = actions.iter().flat_map(|(k, v)| [k.as_str(), v.as_str()]).collect();
     // подписка до показа: иначе быстрый щелчок можно пропустить
     let signals = (wait > 0 && !actions.is_empty()).then(|| p.receive_all_signals().ok()).flatten();
-    let reply = p.call_method("Notify", &("yami-shot", 0u32, "", summary, body, list, hints, -1i32)).ok()?;
+    let reply = p.call_method("Notify", &("nemo-shot", 0u32, "", summary, body, list, hints, -1i32)).ok()?;
     let id: u32 = reply.body().deserialize().ok()?;
     let signals = signals?;
     let (tx, rx) = mpsc::channel();
@@ -69,13 +69,13 @@ pub fn send(summary: &str, body: &str, thumb: Option<&Img>, actions: &[(String, 
 }
 
 pub fn picker_available() -> bool {
-    find_exe("yami-files").is_some() || find_exe("zenity").is_some()
+    find_exe("nemo-files").is_some() || find_exe("zenity").is_some()
 }
 
 /// спросить, куда сохранить. None — отменили
 pub fn pick_save(dir: &Path, name: &str) -> Option<PathBuf> {
-    let out = if find_exe("yami-files").is_some() {
-        Command::new("yami-files").args(["--pick", "save", "--name", name, "--filter", "PNG|*.png", "--folder"]).arg(dir).output()
+    let out = if find_exe("nemo-files").is_some() {
+        Command::new("nemo-files").args(["--pick", "save", "--name", name, "--filter", "PNG|*.png", "--folder"]).arg(dir).output()
     } else {
         Command::new("zenity").args(["--file-selection", "--save"]).arg(format!("--filename={}", dir.join(name).display())).output()
     }

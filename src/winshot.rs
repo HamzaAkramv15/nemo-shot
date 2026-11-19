@@ -8,7 +8,7 @@
 use crate::cfg::Cfg;
 use std::process::{Command, Stdio};
 use std::time::{Duration, Instant};
-use yami_px::paths::find_exe;
+use nemo_px::paths::find_exe;
 
 /// картинка из буфера обмена (PNG); None — там не картинка
 fn clipboard_png() -> Option<Vec<u8>> {
@@ -59,7 +59,7 @@ pub fn run(cfg: &Cfg) -> Option<i32> {
     }
     if cfg.notify {
         let summary = if saved.is_some() { crate::i18n::tr("скриншот сохранён") } else { crate::i18n::tr("скриншот в буфере обмена") };
-        let body = saved.as_ref().map(|p| yami_px::paths::pretty(p)).unwrap_or_default();
+        let body = saved.as_ref().map(|p| nemo_px::paths::pretty(p)).unwrap_or_default();
         crate::notify::send(summary, &body, None, &[], 0);
     }
     Some(0)

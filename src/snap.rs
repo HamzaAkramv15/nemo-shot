@@ -8,7 +8,7 @@ pub use crate::draw::paint;
 use crate::app::{App, Msg};
 use smithay_client_toolkit::seat::keyboard::{KeyEvent, Keysym};
 use std::collections::HashMap;
-use yami_px::gfx::{Canvas, Img, C, R};
+use nemo_px::gfx::{Canvas, Img, C, R};
 use std::path::PathBuf;
 use std::rc::Rc;
 use std::time::Instant;
@@ -85,7 +85,7 @@ pub struct Snap {
 }
 
 impl Snap {
-    pub fn colors(t: &yami_px::theme::Theme) -> [C; 6] {
+    pub fn colors(t: &nemo_px::theme::Theme) -> [C; 6] {
         [t.red, C::hex(0xffffff), C::hex(0x0b0909), t.ok, t.warn, C::hex(0x3a9fd0)]
     }
     pub(crate) fn cur_sel(&self, out: &str) -> Option<R> {
@@ -94,10 +94,10 @@ impl Snap {
 }
 
 impl Snap {
-    /// для `yami-shell shot`: «рабочий стол» из полос, выделение и пара меток
+    /// для `nemo-shell shot`: «рабочий стол» из полос, выделение и пара меток
     /// снимок для `shot`: шахматка с «окном» или настоящий кадр (`shot --frame`, картинки README);
     /// разметка задана для 1280×720 и масштабируется под кадр
-    pub fn mock(w: i32, h: i32, edit: bool, t: &yami_px::theme::Theme, frame: Option<Vec<u32>>) -> Snap {
+    pub fn mock(w: i32, h: i32, edit: bool, t: &nemo_px::theme::Theme, frame: Option<Vec<u32>>) -> Snap {
         let px = frame.unwrap_or_else(|| {
             let mut px = vec![0u32; (w * h) as usize];
             for y in 0..h {
@@ -223,7 +223,7 @@ fn in_corner(x: i32, y: i32, w: i32, h: i32) -> bool {
 }
 
 pub(crate) fn file_name(prefix: &str) -> String {
-    let tm = yami_px::time::local_now();
+    let tm = nemo_px::time::local_now();
     format!("{prefix}-{:04}-{:02}-{:02}_{:02}-{:02}-{:02}.png", tm.year, tm.mon, tm.day, tm.hour, tm.min, tm.sec)
 }
 
@@ -235,7 +235,7 @@ impl App {
             return;
         }
         let outs: Vec<String> = imgs.keys().cloned().collect();
-        let mut sn = Snap { imgs: imgs.into_iter().map(|(k, v)| (k, Rc::new(v))).collect(), mode, sel: None, drag: None, tool: Tool::Select, color: 0, size: 4, marks: vec![], redo: vec![], ptr: None, flash: None, wins, busy: false, hint: None, ocr: yami_px::paths::find_exe("tesseract").is_some(), qr: yami_px::paths::find_exe("zbarimg").is_some() };
+        let mut sn = Snap { imgs: imgs.into_iter().map(|(k, v)| (k, Rc::new(v))).collect(), mode, sel: None, drag: None, tool: Tool::Select, color: 0, size: 4, marks: vec![], redo: vec![], ptr: None, flash: None, wins, busy: false, hint: None, ocr: nemo_px::paths::find_exe("tesseract").is_some(), qr: nemo_px::paths::find_exe("zbarimg").is_some() };
         let focus = self.focus_out(&outs);
         if mode == Mode::Screen {
             let (w, h) = self.output_size(&focus);
@@ -622,7 +622,7 @@ impl App {
         let mut png = vec![];
         image::codecs::png::PngEncoder::new(&mut png).write_image(&rgba, w as u32, h as u32, image::ExtendedColorType::Rgba8).ok()?;
         // миниатюра для уведомления
-        let thumb = image::RgbaImage::from_raw(w as u32, h as u32, rgba).map(|i| yami_px::icons::fit_in(i, crate::notify::THUMB_W, crate::notify::THUMB_H));
+        let thumb = image::RgbaImage::from_raw(w as u32, h as u32, rgba).map(|i| nemo_px::icons::fit_in(i, crate::notify::THUMB_W, crate::notify::THUMB_H));
         Some((png, thumb?))
     }
 
@@ -642,7 +642,7 @@ impl App {
                 return;
             }
             // снимок экрана — только в свой каталог 0700, не в общий /tmp
-            let Ok(dir) = yami_px::paths::private_tmp("yami-read") else {
+            let Ok(dir) = nemo_px::paths::private_tmp("nemo-read") else {
                 let _ = tx.send(Msg::SnapText(qr, None));
                 return;
             };
@@ -679,7 +679,7 @@ impl App {
         self.snap_finish(c, s || !c, false);
     }
 
-    /// готово: copy — в буфер, save — в папку, ask — спросить место диалогом yami-files
+    /// готово: copy — в буфер, save — в папку, ask — спросить место диалогом nemo-files
     pub fn snap_finish(&mut self, copy: bool, save: bool, ask: bool) {
         // один снимок на один оверлей: кнопка панели, клавиша и мгновенный режим сходятся сюда
         if self.snap.as_ref().is_some_and(|s| s.flash.is_some() || s.busy) {
@@ -705,7 +705,7 @@ impl App {
             let mut path: Option<PathBuf> = None;
             let mut err = None;
             let mut picked = false;
-            // «сохранить как» спрашивает окно yami-files; без него — в папку скриншотов, как «сохранить»
+            // «сохранить как» спрашивает окно nemo-files; без него — в папку скриншотов, как «сохранить»
             if ask && crate::notify::picker_available() {
                 let _ = std::fs::create_dir_all(&dir);
                 match crate::notify::pick_save(&dir, &name) {
@@ -754,7 +754,7 @@ impl App {
             _ => crate::i18n::tr("скриншот в буфере обмена"),
         }
         .to_string();
-        let body = path.as_ref().map(|p| yami_px::paths::pretty(p)).unwrap_or_default();
+        let body = path.as_ref().map(|p| nemo_px::paths::pretty(p)).unwrap_or_default();
         let open = crate::i18n::tr("открыть").to_string();
         let folder = crate::i18n::tr("в папке").to_string();
         self.work(move || {

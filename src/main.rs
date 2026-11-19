@@ -1,9 +1,9 @@
-// yami-shot — скриншоты для Wayland: заморозить экран, выделить, разметить, скопировать, сохранить,
+// nemo-shot — скриншоты для Wayland: заморозить экран, выделить, разметить, скопировать, сохранить,
 // прочитать текст или QR. Работает сам по себе, на любом композиторе с layer-shell и screencopy.
 //
-//   yami-shot [area|window|screen] [--delay СЕК]
-//   yami-shot ocr ФАЙЛ                 текст с картинки
-//   yami-shot shot [-o ПАПКА] [--lang en]   снимки оверлея в PNG без Wayland
+//   nemo-shot [area|window|screen] [--delay СЕК]
+//   nemo-shot ocr ФАЙЛ                 текст с картинки
+//   nemo-shot shot [-o ПАПКА] [--lang en]   снимки оверлея в PNG без Wayland
 
 mod setup;
 mod app;
@@ -17,18 +17,19 @@ mod winshot;
 
 use snap::Mode;
 use std::path::PathBuf;
-use yami_px::{font, gfx, icons, look, ui};
+use nemo_px::{font, gfx, icons, look, ui};
 
-const HELP: &str = "yami-shot [area|window|screen] [--delay SECONDS]
-yami-shot ocr FILE
-yami-shot install|uninstall|deps
-yami-shot shot [-o DIR] [--lang en] [--frame PNG]
+const HELP: &str = "nemo-shot [area|window|screen] [--delay SECONDS]
+nemo-shot ocr FILE
+nemo-shot install|uninstall|deps
+nemo-shot shot [-o DIR] [--lang en] [--frame PNG]
 
-settings: ~/.config/yami/shot.json, look: ~/.config/yami/style.json and style.shot.json";
+settings: ~/.config/nemo/shot.json, look: ~/.config/nemo/style.json and style.shot.json";
 
 fn main() {
+    nemo_px::paths::migrate_legacy();
     let args: Vec<String> = std::env::args().skip(1).collect();
-    if let Some(c) = yami_px::install::dispatch(&setup::SPEC, &args) {
+    if let Some(c) = nemo_px::install::dispatch(&setup::SPEC, &args) {
         std::process::exit(c);
     }
     let mut mode = Mode::Area;
@@ -36,7 +37,7 @@ fn main() {
     let mut it = args.iter();
     while let Some(a) = it.next() {
         match a.as_str() {
-            "--version" => return println!("yami-shot {}", env!("CARGO_PKG_VERSION")),
+            "--version" => return println!("nemo-shot {}", env!("CARGO_PKG_VERSION")),
             "-h" | "--help" => return println!("{HELP}"),
             "shot" => std::process::exit(shot(&args[1..])),
             "ocr" => {
@@ -48,7 +49,7 @@ fn main() {
             "screen" => mode = Mode::Screen,
             "--delay" => delay = it.next().and_then(|d| d.parse().ok()).unwrap_or(0),
             other => {
-                eprintln!("yami-shot: unknown argument: {other}\n{HELP}");
+                eprintln!("nemo-shot: unknown argument: {other}\n{HELP}");
                 std::process::exit(2);
             }
         }
@@ -74,7 +75,7 @@ fn take_lock() -> Option<Option<std::fs::File>> {
     use std::io::{Read, Seek, Write};
     use std::os::unix::io::AsRawFd;
     let Some(dir) = std::env::var_os("XDG_RUNTIME_DIR") else { return Some(None) };
-    let Ok(mut f) = std::fs::OpenOptions::new().create(true).truncate(false).read(true).write(true).open(PathBuf::from(dir).join("yami-shot.lock")) else { return Some(None) };
+    let Ok(mut f) = std::fs::OpenOptions::new().create(true).truncate(false).read(true).write(true).open(PathBuf::from(dir).join("nemo-shot.lock")) else { return Some(None) };
     // SAFETY: flock на своём открытом файле; снимается при закрытии
     if unsafe { libc::flock(f.as_raw_fd(), libc::LOCK_EX | libc::LOCK_NB) } != 0 {
         let mut s = String::new();
@@ -115,9 +116,9 @@ fn shot(args: &[String]) -> i32 {
     }
     i18n::set(&look.lang);
     // русская надпись без перевода — ошибка на любом языке, кроме русского; `--fit`: надписи, которым тесно
-    let audit = !matches!(yami_px::i18n::normalize(&lang), "ru" | "");
+    let audit = !matches!(nemo_px::i18n::normalize(&lang), "ru" | "");
     i18n::audit(audit);
-    yami_px::gfx::watch_text(args.iter().any(|a| a == "--fit"));
+    nemo_px::gfx::watch_text(args.iter().any(|a| a == "--fit"));
     let _ = std::fs::create_dir_all(&out);
     let mut fonts = font::Fonts::with(look.font("shot"));
     let mut ic = icons::Icons::new("");
@@ -135,7 +136,7 @@ fn shot(args: &[String]) -> i32 {
             bad += 1;
         }
         println!("{}", f.display());
-        for p in yami_px::gfx::fit_report() {
+        for p in nemo_px::gfx::fit_report() {
             println!("  layout [{name}]: {p}");
             bad += 1;
         }

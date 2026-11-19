@@ -1,8 +1,8 @@
-// Настройки yami-shot: ~/.config/yami/shot.json (вид — отдельно, style.json и style.shot.json).
+// Настройки nemo-shot: ~/.config/nemo/shot.json (вид — отдельно, style.json и style.shot.json).
 
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
-use yami_px::paths;
+use nemo_px::paths;
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(default, rename_all = "camelCase")]
@@ -28,7 +28,7 @@ impl Default for Cfg {
 }
 
 fn path() -> PathBuf {
-    paths::config_dir().join("yami/shot.json")
+    paths::config_dir().join("nemo/shot.json")
 }
 
 impl Cfg {
