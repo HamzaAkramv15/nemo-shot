@@ -2,6 +2,7 @@
 // прочитать текст или QR. Работает сам по себе, на любом композиторе с layer-shell и screencopy.
 //
 //   nemo-shot [area|window|screen] [--delay СЕК]
+//   nemo-shot record [screen|area|stop] [--audio] [--delay СЕК]  запись экрана (повторный вызов останавливает)
 //   nemo-shot ocr ФАЙЛ                 текст с картинки
 //   nemo-shot shot [-o ПАПКА] [--lang en]   снимки оверлея в PNG без Wayland
 
@@ -12,6 +13,7 @@ mod draw;
 mod i18n;
 mod notify;
 mod ocr;
+mod record;
 mod snap;
 mod winshot;
 
@@ -20,6 +22,7 @@ use std::path::PathBuf;
 use nemo_px::{font, gfx, icons, look, ui};
 
 const HELP: &str = "nemo-shot [area|window|screen] [--delay SECONDS]
+nemo-shot record [screen|area|stop] [--audio] [--delay SECONDS]   (run again to stop; needs wf-recorder)
 nemo-shot ocr FILE
 nemo-shot install|uninstall|deps
 nemo-shot shot [-o DIR] [--lang en] [--frame PNG]
@@ -40,6 +43,10 @@ fn main() {
             "--version" => return println!("nemo-shot {}", env!("CARGO_PKG_VERSION")),
             "-h" | "--help" => return println!("{HELP}"),
             "shot" => std::process::exit(shot(&args[1..])),
+            "record" => {
+                i18n::set(&look::Look::load("shot").lang);
+                std::process::exit(record::run(&args[1..], &cfg::Cfg::load()));
+            }
             "ocr" => {
                 i18n::set(&look::Look::load("shot").lang);
                 std::process::exit(ocr::cli(&args[1..]));

@@ -6,7 +6,7 @@ pub const SPEC: Spec = Spec {
     name: "nemo-shot",
     version: env!("CARGO_PKG_VERSION"),
     about: ["скриншоты: разметка, текст и QR со снимка", "screenshots: markup, text and QR from a shot", "capturas: anotações, texto e QR"], // i18n-ok
-    deps: "grim, wl-clipboard; optional: tesseract, zbar, nemo-files or zenity",
+    deps: "grim, wl-clipboard; optional: tesseract, zbar, wf-recorder (recording), slurp (area recording), nemo-files or zenity",
     assets: &[],
     choices: &[],
 };
