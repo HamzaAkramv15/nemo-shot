@@ -34,6 +34,13 @@ fn out_dir(cfg: &Cfg) -> PathBuf {
     nemo_px::paths::home().join("Videos")
 }
 
+/// монитор выхода по умолчанию (то, что играет): имя приёмника из pactl + «.monitor»
+fn default_monitor() -> Option<String> {
+    let o = Command::new("pactl").arg("get-default-sink").output().ok()?;
+    let s = String::from_utf8_lossy(&o.stdout).trim().to_string();
+    (o.status.success() && !s.is_empty()).then(|| format!("{s}.monitor"))
+}
+
 pub fn run(args: &[String], cfg: &Cfg) -> i32 {
     let mut area = false;
     let mut audio = false;
@@ -100,8 +107,20 @@ pub fn run(args: &[String], cfg: &Cfg) -> i32 {
     let file = dir.join(format!("{}-{:04}-{:02}-{:02}_{:02}-{:02}-{:02}.mp4", cfg.prefix, tm.year, tm.mon, tm.day, tm.hour, tm.min, tm.sec));
     let mut c = Command::new("wf-recorder");
     c.arg("-f").arg(&file);
-    if audio {
-        c.arg("--audio");
+    // звук: флаг --audio или настройка recordAudio (mic — источник по умолчанию, system — монитор выхода по умолчанию)
+    match (audio, cfg.record_audio.as_str()) {
+        (_, "system") => match default_monitor() {
+            Some(d) => {
+                c.arg(format!("--audio={d}"));
+            }
+            None => {
+                c.arg("--audio");
+            }
+        },
+        (true, _) | (_, "mic") => {
+            c.arg("--audio");
+        }
+        _ => {}
     }
     if let Some(g) = &geom {
         c.args(["-g", g]);

@@ -19,11 +19,13 @@ pub struct Cfg {
     pub confirm: String,
     /// начало имени файла
     pub prefix: String,
+    /// звук записи экрана: "off", "mic" или "system"
+    pub record_audio: String,
 }
 
 impl Default for Cfg {
     fn default() -> Cfg {
-        Cfg { dir: String::new(), copy: true, save: true, loupe: true, notify: true, delay: 3, confirm: "space".into(), prefix: "nemo".into() }
+        Cfg { dir: String::new(), copy: true, save: true, loupe: true, notify: true, delay: 3, confirm: "space".into(), prefix: "nemo".into(), record_audio: "off".into() }
     }
 }
 

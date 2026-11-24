@@ -84,6 +84,7 @@ nemo-shot shot -o DIR                              # the overlay as PNG without 
 | `notify` | `true` | a notification with the picture |
 | `delay` | `3` | the seconds of the ◷ timer button |
 | `prefix` | `nemo` | the start of the file name |
+| `recordAudio` | `off` | sound of screen recordings: `off`, `mic` (default microphone), `system` (what is playing) |
 
 ## Look and themes
 
