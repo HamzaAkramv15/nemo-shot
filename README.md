@@ -85,6 +85,8 @@ nemo-shot shot -o DIR                              # the overlay as PNG without 
 | `delay` | `3` | the seconds of the ◷ timer button |
 | `prefix` | `nemo` | the start of the file name |
 | `recordAudio` | `off` | sound of screen recordings: `off`, `mic` (default microphone), `system` (what is playing) |
+| `recordDir` | `` | folder of screen recordings; empty: `~/Videos` |
+| `recordFps` | `0` | recording frame rate: `0` as the screen, `30` or `60` |
 
 ## Look and themes
 

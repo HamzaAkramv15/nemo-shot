@@ -27,11 +27,14 @@ fn say(summary: &str, body: &str) {
     crate::notify::send(summary, body, None, &[], 0);
 }
 
+/// видео ложатся в recordDir (пусто — «Видео»); папка снимков им больше не служит
 fn out_dir(cfg: &Cfg) -> PathBuf {
-    if !cfg.dir.is_empty() {
-        return PathBuf::from(&cfg.dir);
+    let d = cfg.record_dir.trim();
+    if d.is_empty() {
+        nemo_px::paths::home().join("Videos")
+    } else {
+        nemo_px::paths::expand(d)
     }
-    nemo_px::paths::home().join("Videos")
 }
 
 /// монитор выхода по умолчанию (то, что играет): имя приёмника из pactl + «.monitor»
@@ -107,6 +110,9 @@ pub fn run(args: &[String], cfg: &Cfg) -> i32 {
     let file = dir.join(format!("{}-{:04}-{:02}-{:02}_{:02}-{:02}-{:02}.mp4", cfg.prefix, tm.year, tm.mon, tm.day, tm.hour, tm.min, tm.sec));
     let mut c = Command::new("wf-recorder");
     c.arg("-f").arg(&file);
+    if cfg.record_fps > 0 {
+        c.args(["-r", &cfg.record_fps.to_string()]);
+    }
     // звук: флаг --audio или настройка recordAudio (mic — источник по умолчанию, system — монитор выхода по умолчанию)
     match (audio, cfg.record_audio.as_str()) {
         (_, "system") => match default_monitor() {

@@ -21,11 +21,15 @@ pub struct Cfg {
     pub prefix: String,
     /// звук записи экрана: "off", "mic" или "system"
     pub record_audio: String,
+    /// папка видео записи; пусто — «Видео»
+    pub record_dir: String,
+    /// кадров в секунду: 0 — как у экрана
+    pub record_fps: u32,
 }
 
 impl Default for Cfg {
     fn default() -> Cfg {
-        Cfg { dir: String::new(), copy: true, save: true, loupe: true, notify: true, delay: 3, confirm: "space".into(), prefix: "nemo".into(), record_audio: "off".into() }
+        Cfg { dir: String::new(), copy: true, save: true, loupe: true, notify: true, delay: 3, confirm: "space".into(), prefix: "nemo".into(), record_audio: "off".into(), record_dir: String::new(), record_fps: 0 }
     }
 }
 
