@@ -113,3 +113,5 @@ and has a «screenshots» settings tab for `shot.json`.
 ## License
 
 MIT
+
+Screen recording: press the **record** button in the top bar of the overlay (it records the selected area, or the whole monitor; the same button stops it), or run `nemo-shot record [screen|area] [--audio]`; the shell binds `Shift+Print`. Needs `wf-recorder`; videos go to `~/Videos`.

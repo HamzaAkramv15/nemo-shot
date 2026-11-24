@@ -16,7 +16,7 @@ fn alive(pid: i32) -> bool {
 }
 
 /// pid и файл идущей записи
-fn running() -> Option<(i32, String)> {
+pub fn running() -> Option<(i32, String)> {
     let t = std::fs::read_to_string(state_file()).ok()?;
     let (pid, file) = t.trim().split_once(' ')?;
     let pid: i32 = pid.parse().ok()?;
@@ -39,6 +39,8 @@ pub fn run(args: &[String], cfg: &Cfg) -> i32 {
     let mut audio = false;
     let mut delay = 0u64;
     let mut stop = false;
+    let mut output = None;
+    let mut region = None;
     let mut it = args.iter();
     while let Some(a) = it.next() {
         match a.as_str() {
@@ -47,6 +49,9 @@ pub fn run(args: &[String], cfg: &Cfg) -> i32 {
             "stop" => stop = true,
             "--audio" => audio = true,
             "--delay" => delay = it.next().and_then(|d| d.parse().ok()).unwrap_or(0),
+            // из оверлея: монитор и область в общих координатах ("x,y WxH")
+            "--output" => output = it.next().cloned(),
+            "--region" => region = it.next().cloned(),
             other => {
                 eprintln!("nemo-shot record: unknown argument: {other}");
                 return 2;
@@ -75,8 +80,8 @@ pub fn run(args: &[String], cfg: &Cfg) -> i32 {
         say(select("запись экрана не установлена", "screen recording is not installed"), select("нужна программа wf-recorder (sudo dnf install wf-recorder)", "needs wf-recorder (sudo dnf install wf-recorder)"));
         return 1;
     }
-    let mut geom = None;
-    if area {
+    let mut geom = region;
+    if area && geom.is_none() {
         match Command::new("slurp").output() {
             Ok(o) if o.status.success() && !o.stdout.is_empty() => geom = Some(String::from_utf8_lossy(&o.stdout).trim().to_string()),
             Ok(_) => return 1, // выбор отменили
@@ -100,6 +105,8 @@ pub fn run(args: &[String], cfg: &Cfg) -> i32 {
     }
     if let Some(g) = &geom {
         c.args(["-g", g]);
+    } else if let Some(o) = &output {
+        c.args(["-o", o]);
     }
     c.stdin(Stdio::null()).stdout(Stdio::null()).stderr(Stdio::null());
     match c.spawn() {

@@ -461,12 +461,46 @@ impl App {
                     self.snap_done();
                 }
                 "saveas" => self.snap_finish(false, false, true),
+                "record" => {
+                    self.snap_record();
+                    return;
+                }
                 "ocr" | "qr" => self.snap_read(a == "qr"),
                 "close" => self.snap_close(),
                 _ => {}
             }
         }
         self.dirty();
+    }
+
+    /// «запись» в оверлее: уже идёт — остановить; иначе записать выделенную область (в общих координатах) или монитор под курсором.
+    /// Сам оверлей закрывается, запись стартует через секунду, чтобы он не попал в кадр
+    fn snap_record(&mut self) {
+        let mut args = vec!["record".to_string()];
+        if crate::record::running().is_none() {
+            if let Some(sn) = &self.snap {
+                let out = sn.sel.as_ref().map(|s| s.0.clone()).or_else(|| sn.ptr.as_ref().map(|p| p.0.clone())).or_else(|| sn.imgs.keys().next().cloned()).unwrap_or_default();
+                if !out.is_empty() {
+                    args.extend(["--output".to_string(), out.clone()]);
+                    // область: из пикселей кадра в логические координаты монитора и в общие — по положению монитора
+                    let pos = self.output_pos(&out);
+                    let (lw, _) = self.output_size(&out);
+                    if let (Some(((ox, oy), sel)), Some(img)) = (pos.zip(sn.sel.as_ref().map(|s| s.1)), sn.imgs.get(&out)) {
+                        let k = lw as f32 / img.w.max(1) as f32;
+                        let full = sel.x <= 0 && sel.y <= 0 && sel.w >= img.w - 1 && sel.h >= img.h - 1;
+                        if !full {
+                            let (x, y, w, h) = (ox + (sel.x as f32 * k).round() as i32, oy + (sel.y as f32 * k).round() as i32, ((sel.w as f32 * k).round() as i32).max(2), ((sel.h as f32 * k).round() as i32).max(2));
+                            args.extend(["--region".to_string(), format!("{x},{y} {w}x{h}")]);
+                        }
+                    }
+                    args.extend(["--delay".to_string(), "1".to_string()]);
+                }
+            }
+        }
+        self.snap_close();
+        if let Ok(exe) = std::env::current_exe() {
+            let _ = std::process::Command::new(exe).args(&args).stdin(std::process::Stdio::null()).stdout(std::process::Stdio::null()).stderr(std::process::Stdio::null()).spawn();
+        }
     }
 
     pub fn snap_key(&mut self, e: &KeyEvent) {

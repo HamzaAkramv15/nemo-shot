@@ -294,7 +294,8 @@ pub(crate) fn top_bar(ui: &mut Ui, sn: &Snap, w: i32) {
     let t = ui.t;
     let modes = [(Mode::Area, "область", "crop_", "m:area"), (Mode::Window, "окно", "window", "m:window"), (Mode::Screen, "экран", "screen", "m:screen")];
     let bw = 112;
-    let tw = bw * 3 + 8 * 2 + 16 + 44;
+    let rec_w = 108;
+    let tw = bw * 3 + 8 * 2 + 16 + 44 + rec_w + 8;
     let r = R::new((w - tw) / 2, 18, tw, 44);
     ui.cv.pxbox(r, &BoxStyle::new(t.panel.alpha(0.96), t.border.lerp(t.red, 0.5)).shadow(4));
     ui.zone(r, Act::Btn("none"), Cur::Default);
@@ -304,6 +305,12 @@ pub(crate) fn top_bar(ui: &mut Ui, sn: &Snap, w: i32) {
         ui.button(br, label, icon, Tone::Ghost, sn.mode == *m, true, Act::Btn(act));
     }
     ui.button(R::new(r.right() - 40, r.y + 7, 32, 30), "", "timer", Tone::Ghost, false, true, Act::Btn("delay"));
+    // запись экрана: область (если выделена) или весь монитор; идёт запись — кнопка её останавливает
+    let on = crate::record::running().is_some();
+    let rr = R::new(r.right() - 40 - 8 - rec_w, r.y + 7, rec_w, 30);
+    let label = if on { crate::i18n::select("стоп", "stop") } else { crate::i18n::select("запись", "record") };
+    ui.button(rr, label, "", if on { Tone::Primary } else { Tone::Ghost }, on, true, Act::Btn("record"));
+    ui.cv.fill(R::new(rr.x + 10, rr.y + 11, 8, 8), if on { C(0xffffffff) } else { C(0xffe5484d) });
     let hint = match sn.mode {
         Mode::Area => "тяни — выделить · enter — весь экран · esc — отмена",
         Mode::Window => "щёлкни по окну · enter — окно под курсором · esc — отмена",

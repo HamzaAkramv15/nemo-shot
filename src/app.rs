@@ -200,6 +200,11 @@ impl App {
     }
 
     /// размер монитора в точках экрана
+    /// положение монитора в общих координатах (для записи области)
+    pub fn output_pos(&self, name: &str) -> Option<(i32, i32)> {
+        self.outputs.outputs().find_map(|o| self.outputs.info(&o).filter(|i| i.name.as_deref() == Some(name))?.logical_position)
+    }
+
     pub fn output_size(&self, name: &str) -> (i32, i32) {
         self.outputs.outputs().find_map(|o| self.outputs.info(&o).filter(|i| i.name.as_deref() == Some(name))?.logical_size).unwrap_or((1, 1))
     }
